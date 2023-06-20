@@ -1,9 +1,11 @@
+'use strict';
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('posts_categories', {
       post_id: {
-        allowNull:false,
         type: Sequelize.INTEGER,
+        allowNull:false,
         references: {
           model: 'blog_posts',
           key: 'id',
@@ -11,8 +13,8 @@ module.exports = {
         primaryKey: true,
       },
       category_id: {
-        allowNull:false,
         type: Sequelize.INTEGER,
+        allowNull:false,
         references: {
           model: 'categories',
           key: 'id',

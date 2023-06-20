@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('blog_posts', {
@@ -18,6 +20,7 @@ module.exports = {
       user_id: {
         allowNull:false,
         type:Sequelize.INTEGER,
+        foreignKey: true,
         references: {
           model: 'users',
           key: 'id'
