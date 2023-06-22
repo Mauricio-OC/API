@@ -1,8 +1,10 @@
 const express = require('express');
-const { handleLogin } = require('../controllers');
 
 const router = express.Router();
 
-router.post('/', handleLogin);
+const LoginController = require('../controllers/login.controller');
+const validateDisplayName = require('../middlewares/validateDisplayName');
+
+router.post('/', validateDisplayName, LoginController.login);
 
 module.exports = router;

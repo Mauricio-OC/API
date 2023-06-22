@@ -1,13 +1,18 @@
-const { login } = require('../services');
+const userService = require('../services/login.service');
+const { createToken } = require('../auth/authToken');
 
-const handleLogin = async (req, res) => {
-  const { type, message } = await login(req.body);
-  if (type) {
-    return res.status(type).json({ message });
-  } 
-    return res.status(200).json({ token: message });
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
+  const result = await userService.login(email, password);
+
+  if (!result) {
+    return res.status(400).json({ message: 'Invalid fields' });
+  }
+
+  const token = createToken(result);
+
+  return res.status(200).json({ token });
 };
 
-module.exports = {
-  handleLogin,
-};
+module.exports = { login };
