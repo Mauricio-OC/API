@@ -1,5 +1,5 @@
 const { User } = require('../models');
-const createToken = require('../utils/JWT');
+const createToken = require('../auth/authToken');
 
 const create = async ({ displayName, email, password, image }) => {
   const user = await User.findOne({ where: { email } });

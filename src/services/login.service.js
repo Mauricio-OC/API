@@ -1,5 +1,5 @@
 const { User } = require('../models');
-const { createToken } = require('../utils/JWT');
+const createToken = require('../auth/authToken');
 
 const login = async ({ email, password }) => {
   if (!email || !password) {
