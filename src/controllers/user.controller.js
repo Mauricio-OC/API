@@ -1,48 +1,84 @@
-const userService = require('../services/user.service');
-const { createToken } = require('../auth/authToken');
+const jwt = require('jsonwebtoken');
+const { statusCode, errorMessages } = require('../middlewares/errors');
+const { userService } = require('../services');
 
-const addUser = async (req, res) => {
-  const { email, displayName, image, password } = req.body;
+const jwtSecret = process.env.JWT_SECRET || 'cool_secret';
 
-  const hasEmail = await userService.verifyEmail(email);
+async function register(req, res) {
+  const { displayName, email, password, image } = req.body;
 
-  if (hasEmail) {
-    return res.status(409).json({ message: 'User already registered' });
+  try {
+    const newUser = await userService.registerUser(displayName, email, password, image);
+
+    if (newUser.statusCode) {
+      const error = new Error(newUser.message);
+      error.statusCode = newUser.statusCode;
+
+      throw error;
+    }
+    
+    const token = jwt
+      .sign({ newUser }, jwtSecret, {
+        algorithm: 'HS256',
+        expiresIn: '7d',
+      });
+
+    res.status(statusCode.SUCCESFULLY_CREATED).json({ token });
+  } catch (error) {
+    res.status(error.statusCode).json({ message: error.message });
   }
+}
 
-  const data = { email, displayName, image, password };
-  const result = await userService.addUser(data);
-  const token = createToken(result);
+async function getUsers(_req, res) {
+  try {
+    const users = await userService.getAll();
 
-  return res.status(201).json({ token });
-};
+    res.status(statusCode.SUCESS).json(users);
+  } catch (error) {
+    res.status(statusCode.INTERNAL_ERROR).json({ message: error.message });
+  }
+}
 
-const findAllUsers = async (req, res) => {
-  const result = await userService.findAllUsers();
+async function getById(req, res) {
+  const { id } = req.params;
 
-  return res.status(200).json(result);
-};
+  try {
+    const user = await userService.getById(id);
 
-const findUserById = async (req, res) => {
-  const userId = req.params.id;
+    if (!user) {
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ message: errorMessages.USER_NOT_FOUND });
+    }
 
-  const result = await userService.findUserById(userId);
+    res.status(statusCode.SUCESS).json(user);
+  } catch (error) {
+    res.status(statusCode.INTERNAL_ERROR).json({ message: error.message });
+  }
+}
 
-  if (!result) return res.status(404).json({ message: 'User does not exist' });
+async function deleteControll(req, res) {
+  const { user } = req;
 
-  return res.status(200).json(result);
-};
+  try {
+    const deletedUser = await userService.deleteControll(user.user.id);
 
-const deleteUser = async (req, res) => {
-  const { id } = req.payload;
-console.log(req.payload);
-  await userService.deleteUser(id);
-  return res.status(204).end();
-};
+    if (deletedUser.statusCode) {
+      const error = deletedUser;
+      return res
+        .status(error.statusCode)
+        .json({ message: error.message });
+    }
+
+    res.status(statusCode.DELETED).json();
+  } catch (error) {
+    res.status(statusCode.INTERNAL_ERROR).json({ message: error.message });
+  }
+}
 
 module.exports = {
-  addUser,
-  findAllUsers,
-  findUserById,
-  deleteUser,
+  register,
+  getUsers,
+  getById,
+  deleteControll,
 };
